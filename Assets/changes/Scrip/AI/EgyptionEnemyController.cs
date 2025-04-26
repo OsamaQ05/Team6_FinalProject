@@ -7,6 +7,8 @@ using Unity.FPS.Game;
 
 public class EnemyFollow : MonoBehaviour
 {
+    Animator anim;
+
     [Header("Player Tracking")]
     public Transform player;
     private NavMeshAgent agent;
@@ -44,6 +46,7 @@ public class EnemyFollow : MonoBehaviour
     {
         agent = GetComponent<NavMeshAgent>();
         audioSource = GetComponent<AudioSource>();
+        anim = GetComponent<Animator>();
         alertIcon?.SetActive(false);
     }
 
@@ -52,6 +55,7 @@ public class EnemyFollow : MonoBehaviour
         if (playerDetected)
         {
             FacePlayer();
+            anim.SetBool("isDetected", true);
             return;
         }
 
@@ -178,4 +182,6 @@ public class EnemyFollow : MonoBehaviour
         Gizmos.color = new Color(1f, 0.5f, 0f, 0.2f); // transparent orange
         Gizmos.DrawWireSphere(transform.position, visionRange); // extended vision
     }
+
 }
+
