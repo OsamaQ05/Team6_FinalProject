@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Spawn Point
   - Play
+  - Statue
   layers:
   - Default
   - TransparentFX
