@@ -1,6 +1,5 @@
 using UnityEngine;
 using System.Collections.Generic;
-using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Collections;
 
@@ -41,6 +40,7 @@ namespace Unity.FPS.Game
         bool artifactSpawned = false;
         float timeLoadEndScene;
         public static SamuraiGameManager Instance;
+        private GameObject spawnedArtifact;
 
         void Awake()
         {
@@ -51,7 +51,7 @@ namespace Unity.FPS.Game
         void Start()
         {
             AudioUtility.SetMasterVolume(1);
-
+            
             // 🔥 Show start message
             DisplayMessage(StartGameMessage, 2f);
 
@@ -62,12 +62,17 @@ namespace Unity.FPS.Game
                 {
                     if (particle != null)
                         particle.Stop();
-                        Debug.Log("5");
                 }
             }
 
             if (RiverAudio != null)
                 RiverAudio.Stop();
+                
+            // Make sure artifact is not active at start
+            if (ArtifactPrefab != null)
+            {
+                ArtifactPrefab.SetActive(false);
+            }
         }
 
         void Update()
@@ -100,6 +105,12 @@ namespace Unity.FPS.Game
             }
         }
 
+        // Public method to check if all statues are cleansed
+        public bool AreAllStatuesCleansed()
+        {
+            return statuesCleansed >= TotalStatues;
+        }
+
         IEnumerator HandleAllStatuesCleansed()
         {
             // 🎯 Show win message immediately
@@ -124,18 +135,27 @@ namespace Unity.FPS.Game
                 RiverAudio.Play();
 
             // 🗡️ Spawn artifact
-            if (ArtifactPrefab != null && ArtifactSpawnPoint != null)
+            SpawnArtifact();
+        }
+
+        void SpawnArtifact()
+        {
+            if (ArtifactPrefab != null && ArtifactSpawnPoint != null && !artifactSpawned)
             {
-                Instantiate(ArtifactPrefab, ArtifactSpawnPoint.position, ArtifactSpawnPoint.rotation);
+                // Instantiate the artifact at the spawn point
+                spawnedArtifact = Instantiate(ArtifactPrefab, ArtifactSpawnPoint.position, ArtifactSpawnPoint.rotation);
+                spawnedArtifact.SetActive(true);
                 artifactSpawned = true;
             }
         }
 
         public void OnArtifactCollected()
         {
+            // Unlock cursor for the win scene
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
 
+            // Play victory sound
             if (VictorySound != null)
             {
                 var audioSource = gameObject.AddComponent<AudioSource>();
@@ -145,6 +165,7 @@ namespace Unity.FPS.Game
                 audioSource.Play();
             }
 
+            // Load the win scene
             SceneManager.LoadScene(WinSceneName);
         }
 
