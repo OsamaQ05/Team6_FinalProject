@@ -92,7 +92,7 @@ namespace Unity.FPS.Game
         audioSource.outputAudioMixerGroup = AudioUtility.GetAudioGroup(AudioUtility.AudioGroups.HUDVictory);
         audioSource.PlayScheduled(AudioSettings.dspTime + DelayBeforeWinMessage);
 
-        DisplayMessageEvent displayMessage = Events.DisplayMessageEvent;
+        DisplayMessageEvent displayMessage = EventsGame.DisplayMessageEvent;
         displayMessage.Message = WinGameMessage;
         displayMessage.DelayBeforeDisplay = DelayBeforeWinMessage;
         EventManager.Broadcast(displayMessage);
@@ -100,7 +100,7 @@ namespace Unity.FPS.Game
     else
     {
         // 👇 Display lose message
-        DisplayMessageEvent displayMessage = Events.DisplayMessageEvent;
+        DisplayMessageEvent displayMessage = EventsGame.DisplayMessageEvent;
         displayMessage.Message = LoseGameMessage;
         displayMessage.DelayBeforeDisplay = DelayBeforeLoseMessage;
         EventManager.Broadcast(displayMessage);

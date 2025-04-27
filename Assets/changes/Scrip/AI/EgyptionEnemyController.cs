@@ -153,7 +153,7 @@ public class EnemyFollow : MonoBehaviour
         }
 
         // Send detection message
-        DisplayMessageEvent messageEvent = Events.DisplayMessageEvent;
+        DisplayMessageEvent messageEvent = EventsGame.DisplayMessageEvent;
         messageEvent.Message = detectionMessage;
         messageEvent.DelayBeforeDisplay = delayBeforeMessage;
         EventManager.Broadcast(messageEvent);

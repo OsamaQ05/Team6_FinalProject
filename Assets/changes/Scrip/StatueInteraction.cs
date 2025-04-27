@@ -6,7 +6,7 @@ using Unity.FPS.Game;
 public class StatueInteraction : MonoBehaviour
 {
     public int statueNumber;
-    private SamuraiGameManager gameManager;
+    private MedievalManager gameManager; // Changed from SamuraiGameManager to MedievalManager
     public Material cleansedMaterial;
     public ParticleSystem cleanseEffect;
     public List<ParticleSystem> fireParticles = new List<ParticleSystem>(); 
@@ -23,7 +23,8 @@ public class StatueInteraction : MonoBehaviour
 
     private void Start()
     {
-        gameManager = FindObjectOfType<SamuraiGameManager>();
+        // Find the MedievalManager instead of SamuraiGameManager
+        gameManager = FindObjectOfType<MedievalManager>();
         statueRenderer = GetComponent<Renderer>();
         gameObject.tag = "Statue";
 
@@ -40,23 +41,28 @@ public class StatueInteraction : MonoBehaviour
         }
     }
 
-   private void Update()
-{
-    if (isCleansed)
-        return; // just stop Update logic, don't hide prompt here
-
-    Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-    RaycastHit hit;
-
-    if (Physics.Raycast(ray, out hit, interactionDistance))
+    private void Update()
     {
-        if (hit.collider != null && hit.collider.gameObject == this.gameObject)
-        {
-            ShowInteractPrompt();
+        if (isCleansed)
+            return; // just stop Update logic, don't hide prompt here
 
-            if (Input.GetKeyDown(KeyCode.E))
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        RaycastHit hit;
+
+        if (Physics.Raycast(ray, out hit, interactionDistance))
+        {
+            if (hit.collider != null && hit.collider.gameObject == this.gameObject)
             {
-                CleanseStatue();
+                ShowInteractPrompt();
+
+                if (Input.GetKeyDown(KeyCode.E))
+                {
+                    CleanseStatue();
+                }
+            }
+            else
+            {
+                HideInteractPrompt();
             }
         }
         else
@@ -64,47 +70,45 @@ public class StatueInteraction : MonoBehaviour
             HideInteractPrompt();
         }
     }
-    else
+
+    void CleanseStatue()
     {
-        HideInteractPrompt();
-    }
-}
+        isCleansed = true;
+        virtuesRestored++;
 
+        // Notify the MedievalManager
+        if (gameManager != null)
+            gameManager.OnStatueCleansed(statueNumber);
+        
+        // We're removing the event broadcast since we'll use the polling method instead
 
-   void CleanseStatue()
-{
-    isCleansed = true;
-    virtuesRestored++;
+        // Visual effects
+        if (cleansedMaterial != null && statueRenderer != null)
+            statueRenderer.material = cleansedMaterial;
 
-    if (gameManager != null)
-        gameManager.OnStatueCleansed(statueNumber);
+        if (cleanseEffect != null)
+            cleanseEffect.Play();
 
-    if (cleansedMaterial != null && statueRenderer != null)
-        statueRenderer.material = cleansedMaterial;
+        if (cleanseSound != null)
+            cleanseSound.Play();
 
-    if (cleanseEffect != null)
-        cleanseEffect.Play();
-
-    if (cleanseSound != null)
-        cleanseSound.Play();
-
-    if (fireParticles != null && fireParticles.Count > 0)
-    {
-        foreach (ParticleSystem fire in fireParticles)
+        if (fireParticles != null && fireParticles.Count > 0)
         {
-            if (fire != null)
-                fire.Play();
+            foreach (ParticleSystem fire in fireParticles)
+            {
+                if (fire != null)
+                    fire.Play();
+            }
         }
+
+        DisplayVirtueRestoredMessage();
+        HideInteractPrompt(); // 🛠 Hide here once it's cleansed
     }
-
-    DisplayVirtueRestoredMessage();
-    HideInteractPrompt(); // 🛠 Hide here once it's cleansed
-}
-
 
     void DisplayVirtueRestoredMessage()
     {
-        DisplayMessageEvent displayMessage = Events.DisplayMessageEvent;
+        // Create a new DisplayMessageEvent directly instead of using Events.DisplayMessageEvent
+        DisplayMessageEvent displayMessage = new DisplayMessageEvent();
         displayMessage.Message = $"{virtueName} Restored!";
         displayMessage.DelayBeforeDisplay = 0f;
         EventManager.Broadcast(displayMessage);
@@ -115,7 +119,7 @@ public class StatueInteraction : MonoBehaviour
         if (interactPromptText != null)
         {
             interactPromptText.alpha = 1f; // Set visible 🔥
-            interactPromptText.text = "<b>Press [ E ] to Cleanse</b>";
+            interactPromptText.text = "<b>Press [ E ] to Light Torch</b>"; // Changed from "Cleanse" to "Light Torch"
         }
     }
 

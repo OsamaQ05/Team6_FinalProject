@@ -211,13 +211,15 @@ namespace Unity.FPS.Game
             EndGameFadeCanvasGroup.gameObject.SetActive(true);
             timeLoadEndScene = Time.time + EndSceneLoadDelay;
         }
+        // Replace only the DisplayMessage method in your SamuraiGameManager.cs file:
 
         void DisplayMessage(string message, float delayBeforeDisplay)
         {
-            DisplayMessageEvent displayMessage = Events.DisplayMessageEvent;
+            // Make sure to use the fully qualified namespace
+            Unity.FPS.Game.DisplayMessageEvent displayMessage = Unity.FPS.Game.EventsGame.DisplayMessageEvent;
             displayMessage.Message = message;
             displayMessage.DelayBeforeDisplay = delayBeforeDisplay;
-            EventManager.Broadcast(displayMessage);
+            Unity.FPS.Game.EventManager.Broadcast(displayMessage);
         }
 
         void OnDestroy()

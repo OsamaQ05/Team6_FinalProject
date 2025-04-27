@@ -26,7 +26,7 @@ namespace Unity.FPS.AI
         {
             int enemiesRemainingNotification = NumberOfEnemiesRemaining - 1;
 
-            EnemyKillEvent evt = Events.EnemyKillEvent;
+            EnemyKillEvent evt = EventsGame.EnemyKillEvent;
             evt.Enemy = enemyKilled.gameObject;
             evt.RemainingEnemyCount = enemiesRemainingNotification;
             EventManager.Broadcast(evt);

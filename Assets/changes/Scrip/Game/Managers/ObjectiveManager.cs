@@ -32,7 +32,7 @@ namespace Unity.FPS.Game
             }
 
             m_ObjectivesCompleted = true;
-            EventManager.Broadcast(Events.AllObjectivesCompletedEvent);
+            EventManager.Broadcast(EventsGame.AllObjectivesCompletedEvent);
         }
 
         void OnDestroy()
@@ -41,3 +41,4 @@ namespace Unity.FPS.Game
         }
     }
 }
+    
