@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Unity.FPS.Gameplay
 {
-    public class ArtifactPickup : Pickup
+    public class ModularArtifactPickup : Pickup
     {
         [Header("Artifact Settings")]
         [Tooltip("Additional VFX to play when artifact is collected")]
@@ -11,16 +11,50 @@ namespace Unity.FPS.Gameplay
         
         [Tooltip("Special audio for artifact collection")]
         public AudioClip ArtifactCollectionSfx;
+        
+        [Tooltip("Check this if this artifact belongs to the Medieval scene")]
+        public bool UseMedievalManager = false;
+        
+        [Tooltip("Check this if this artifact belongs to the Samurai scene")]
+        public bool UseSamuraiManager = false;
 
         protected override void Start()
         {
             base.Start();
             
-            // You can add any specific initialization for the artifact here
-            // For example, initially hiding it until statues are cleansed
-            if (SamuraiGameManager.Instance != null && !SamuraiGameManager.Instance.AreAllStatuesCleansed())
+            // Try to find the appropriate manager
+            if (UseMedievalManager)
             {
-                gameObject.SetActive(false);
+                MedievalManager medievalManager = FindObjectOfType<MedievalManager>();
+                if (medievalManager != null && !medievalManager.AreAllStatuesCleansed())
+                {
+                    gameObject.SetActive(false);
+                }
+            }
+            else if (UseSamuraiManager)
+            {
+                SamuraiGameManager samuraiManager = FindObjectOfType<SamuraiGameManager>();
+                if (samuraiManager != null && !samuraiManager.AreAllStatuesCleansed())
+                {
+                    gameObject.SetActive(false);
+                }
+            }
+            else
+            {
+                // If no specific manager is selected, try to find either one
+                MedievalManager medievalManager = FindObjectOfType<MedievalManager>();
+                if (medievalManager != null)
+                {
+                    UseMedievalManager = true;
+                }
+                else
+                {
+                    SamuraiGameManager samuraiManager = FindObjectOfType<SamuraiGameManager>();
+                    if (samuraiManager != null)
+                    {
+                        UseSamuraiManager = true;
+                    }
+                }
             }
         }
 
@@ -40,10 +74,36 @@ namespace Unity.FPS.Gameplay
                 AudioUtility.CreateSFX(ArtifactCollectionSfx, transform.position, AudioUtility.AudioGroups.Pickup, 0f);
             }
 
-            // Notify the game manager that the artifact was collected
-            if (SamuraiGameManager.Instance != null)
+            // Notify the appropriate game manager that the artifact was collected
+            if (UseMedievalManager)
             {
-                SamuraiGameManager.Instance.OnArtifactCollected();
+                MedievalManager medievalManager = FindObjectOfType<MedievalManager>();
+                if (medievalManager != null)
+                {
+                    Debug.Log("Artifact collected - notifying MedievalManager");
+                    medievalManager.OnArtifactCollected();
+                }
+                else
+                {
+                    Debug.LogError("MedievalManager not found!");
+                }
+            }
+            else if (UseSamuraiManager)
+            {
+                SamuraiGameManager samuraiManager = FindObjectOfType<SamuraiGameManager>();
+                if (samuraiManager != null)
+                {
+                    Debug.Log("Artifact collected - notifying SamuraiGameManager");
+                    samuraiManager.OnArtifactCollected();
+                }
+                else
+                {
+                    Debug.LogError("SamuraiGameManager not found!");
+                }
+            }
+            else
+            {
+                Debug.LogError("No game manager type selected or detected for artifact pickup!");
             }
             
             // Destroy the artifact object after pickup
