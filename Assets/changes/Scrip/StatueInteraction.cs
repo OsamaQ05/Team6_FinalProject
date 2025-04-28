@@ -6,7 +6,6 @@ using Unity.FPS.Game;
 public class StatueInteraction : MonoBehaviour
 {
     public int statueNumber;
-    private MedievalManager gameManager; // Changed from SamuraiGameManager to MedievalManager
     public Material cleansedMaterial;
     public ParticleSystem cleanseEffect;
     public List<ParticleSystem> fireParticles = new List<ParticleSystem>(); 
@@ -14,17 +13,49 @@ public class StatueInteraction : MonoBehaviour
     public string virtueName; 
     public float interactionDistance = 5f;
 
+    // Enum for manager selection (will show as radio buttons in Inspector)
+    public enum ManagerType
+    {
+        Medieval,
+        Samurai
+    }
+    
+    [Header("Manager Selection")]
+    [Tooltip("Select which manager type to use")]
+    public ManagerType selectedManager = ManagerType.Medieval;
+
     [Header("Interact Prompt Settings")]
     public TextMeshProUGUI interactPromptText; // ONLY the TMP text (no parent UI!)
+    
+    [Tooltip("Custom prompt text (leave empty for default)")]
+    public string customPromptText = "";
 
     private bool isCleansed = false;
     private static int virtuesRestored = 0;
     private Renderer statueRenderer;
+    
+    // Manager references
+    private MedievalManager medievalManager;
+    private SamuraiGameManager samuraiManager;
 
     private void Start()
     {
-        // Find the MedievalManager instead of SamuraiGameManager
-        gameManager = FindObjectOfType<MedievalManager>();
+        // Find the appropriate manager based on selection
+        switch (selectedManager)
+        {
+            case ManagerType.Medieval:
+                medievalManager = FindObjectOfType<MedievalManager>();
+                if (medievalManager == null)
+                    Debug.LogError("MedievalManager not found but StatueInteraction is set to use it!");
+                break;
+                
+            case ManagerType.Samurai:
+                samuraiManager = FindObjectOfType<SamuraiGameManager>();
+                if (samuraiManager == null)
+                    Debug.LogError("SamuraiGameManager not found but StatueInteraction is set to use it!");
+                break;
+        }
+        
         statueRenderer = GetComponent<Renderer>();
         gameObject.tag = "Statue";
 
@@ -76,11 +107,19 @@ public class StatueInteraction : MonoBehaviour
         isCleansed = true;
         virtuesRestored++;
 
-        // Notify the MedievalManager
-        if (gameManager != null)
-            gameManager.OnStatueCleansed(statueNumber);
-        
-        // We're removing the event broadcast since we'll use the polling method instead
+        // Notify the selected manager
+        switch (selectedManager)
+        {
+            case ManagerType.Medieval:
+                if (medievalManager != null)
+                    medievalManager.OnStatueCleansed(statueNumber);
+                break;
+                
+            case ManagerType.Samurai:
+                if (samuraiManager != null)
+                    samuraiManager.OnStatueCleansed(statueNumber);
+                break;
+        }
 
         // Visual effects
         if (cleansedMaterial != null && statueRenderer != null)
@@ -107,7 +146,7 @@ public class StatueInteraction : MonoBehaviour
 
     void DisplayVirtueRestoredMessage()
     {
-        // Create a new DisplayMessageEvent directly instead of using Events.DisplayMessageEvent
+        // Create a new DisplayMessageEvent directly
         DisplayMessageEvent displayMessage = new DisplayMessageEvent();
         displayMessage.Message = $"{virtueName} Restored!";
         displayMessage.DelayBeforeDisplay = 0f;
@@ -119,7 +158,22 @@ public class StatueInteraction : MonoBehaviour
         if (interactPromptText != null)
         {
             interactPromptText.alpha = 1f; // Set visible 🔥
-            interactPromptText.text = "<b>Press [ E ] to Light Torch</b>"; // Changed from "Cleanse" to "Light Torch"
+            
+            // Use custom prompt if provided, otherwise use default based on manager type
+            string promptAction;
+            
+            if (!string.IsNullOrEmpty(customPromptText))
+            {
+                promptAction = customPromptText;
+            }
+            else
+            {
+                // Default text based on manager type
+                promptAction = selectedManager == ManagerType.Medieval ? 
+                    "Light Torch" : "Cleanse Statue";
+            }
+            
+            interactPromptText.text = $"<b>Press [ E ] to {promptAction}</b>"; 
         }
     }
 
