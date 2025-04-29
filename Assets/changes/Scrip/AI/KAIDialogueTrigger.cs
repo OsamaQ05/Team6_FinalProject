@@ -2,7 +2,7 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 using System.Collections;
-//
+
 public class KAI_MessageTrigger : MonoBehaviour
 {
     [TextArea(3, 10)]
@@ -16,6 +16,11 @@ public class KAI_MessageTrigger : MonoBehaviour
 
     private bool hasSpoken = false;
     private CanvasGroup canvasGroup;
+    
+    // Static reference to ensure only one message shows at a time
+    private static Coroutine activeShowCoroutine;
+    private static Coroutine activeFadeCoroutine;
+    private static MonoBehaviour activeScript;
 
     private void Start()
     {
@@ -33,31 +38,68 @@ public class KAI_MessageTrigger : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
+        // Note: Changed from "Play" to "Player" in the original - adjust as needed
         if (other.CompareTag("Play") && !hasSpoken)
         {
             hasSpoken = true;
-            StartCoroutine(ShowMessage());
+            
+            // Stop any active dialogue from any trigger
+            StopActiveDialogue();
+            
+            // Start this dialogue
+            activeScript = this;
+            activeShowCoroutine = StartCoroutine(ShowMessage());
+        }
+    }
+    
+    // Helper method to stop any active dialogue
+    private void StopActiveDialogue()
+    {
+        if (activeScript != null)
+        {
+            if (activeShowCoroutine != null)
+            {
+                activeScript.StopCoroutine(activeShowCoroutine);
+                activeShowCoroutine = null;
+            }
+            
+            if (activeFadeCoroutine != null)
+            {
+                activeScript.StopCoroutine(activeFadeCoroutine);
+                activeFadeCoroutine = null;
+            }
         }
     }
 
     private IEnumerator ShowMessage()
     {
+        // Reset everything to start fresh
         dialoguePanel.SetActive(true);
         canvasGroup.alpha = 1f;
         dialogueTMP.text = "";
 
         if (dialogueAudio != null)
+        {
+            if (dialogueAudio.isPlaying)
+            {
+                dialogueAudio.Stop();
+            }
             dialogueAudio.Play();
+        }
 
+        // Typewriter effect
         foreach (char c in dialogueText)
         {
             dialogueTMP.text += c;
             yield return new WaitForSeconds(typingSpeed);
         }
 
+        // Display duration
         yield return new WaitForSeconds(displayDuration);
 
-        StartCoroutine(FadeOut());
+        // Start fade out
+        activeFadeCoroutine = StartCoroutine(FadeOut());
+        activeShowCoroutine = null;
     }
 
     private IEnumerator FadeOut()
@@ -73,5 +115,6 @@ public class KAI_MessageTrigger : MonoBehaviour
 
         canvasGroup.alpha = 0f;
         dialoguePanel.SetActive(false);
+        activeFadeCoroutine = null;
     }
 }

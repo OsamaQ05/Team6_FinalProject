@@ -47,7 +47,6 @@ namespace Unity.FPS.Gameplay
         private int lastKnownStatueCount = 0;
         
         // Add this to prevent the crown from having pickup behavior
-        // Don't want the crown to disappear on touch
         private bool isPickupDisabled = false;
         
         void Awake()
@@ -115,7 +114,7 @@ namespace Unity.FPS.Gameplay
             {
                 Crown.SetActive(false);
                 
-                // IMPORTANT: Disable any Pickup component on the crown so it doesn't vanish when touched
+                // CRITICAL: Disable any Pickup component on the crown
                 DisableCrownPickup();
             }
                 
@@ -127,12 +126,13 @@ namespace Unity.FPS.Gameplay
             StartCoroutine(MonitorObjectives());
         }
         
-        // Add this method to disable any Pickup component on the Crown
+        // Disable any Pickup component to prevent the crown from disappearing
         void DisableCrownPickup()
         {
             if (Crown != null && !isPickupDisabled)
             {
-                // Check for Pickup component and disable it
+                // Check for ANY component that might be making the crown disappear
+                // First, try standard Pickup component
                 Pickup pickup = Crown.GetComponent<Pickup>();
                 if (pickup != null)
                 {
@@ -140,13 +140,27 @@ namespace Unity.FPS.Gameplay
                     Debug.Log("Disabled Pickup component on Crown");
                 }
                 
-                // Check for any collider component that might be set as a trigger
-                Collider crowncollider = Crown.GetComponent<Collider>();
-                if (crowncollider != null && crowncollider.isTrigger)
+                // Check for any collider that might be set as a trigger
+                Collider[] crowncolliders = Crown.GetComponentsInChildren<Collider>(true);
+                foreach (Collider col in crowncolliders)
                 {
-                    // Either disable the trigger or make it non-trigger
-                    // crowncollider.isTrigger = false;
-                    Debug.Log("Modified collider on Crown");
+                    if (col.isTrigger)
+                    {
+                        col.enabled = false;
+                        Debug.Log("Disabled trigger collider on Crown or child");
+                    }
+                }
+                
+                // Check for any script with "pickup" in the name
+                MonoBehaviour[] scripts = Crown.GetComponents<MonoBehaviour>();
+                foreach (MonoBehaviour script in scripts)
+                {
+                    string scriptName = script.GetType().Name.ToLower();
+                    if (scriptName.Contains("pickup") || scriptName.Contains("collect"))
+                    {
+                        script.enabled = false;
+                        Debug.Log("Disabled possible pickup script: " + script.GetType().Name);
+                    }
                 }
                 
                 isPickupDisabled = true;
@@ -181,16 +195,32 @@ namespace Unity.FPS.Gameplay
         // This gets called from the CrownSpawnPoint script
         public void OnCrownRevealed()
         {
-            Debug.Log("Crown revealed by spawn trigger");
+            Debug.Log("OnCrownRevealed called - Crown revealed by spawn trigger");
             
-            // Make sure the crown can't be picked up (only returned)
+            // CRITICAL: Make sure ANY pickup behavior is disabled
             DisableCrownPickup();
             
             // Set the crown objective as active
             isCrownObjectiveActive = true;
             
-            // If the current objective index is already at 1, we don't need to do anything else
-            // The return objective should already be active
+            if (Crown != null)
+            {
+                Debug.Log("Crown active state: " + Crown.activeSelf);
+            }
+            
+            Debug.Log("Current objective index: " + sequentialObjective.GetCurrentObjectiveIndex());
+        }
+        
+        // NEW METHOD: Called by CrownSpawnTrigger to immediately advance to next objective
+        public void AdvanceToNextObjectiveAfterCrownRevealed()
+        {
+            Debug.Log("Crown revealed, advancing to next objective");
+            
+            // Advance to the next objective
+            sequentialObjective.AdvanceToNextObjective();
+            
+            // Trigger mask spawn
+            StartCoroutine(DelayedMaskSpawn());
         }
         
         void Update()
@@ -217,8 +247,7 @@ namespace Unity.FPS.Gameplay
             if (isCrownObjectiveActive && 
                 sequentialObjective.GetCurrentObjectiveIndex() == 1 && // Now index 1 is the return crown objective
                 CrownReturnLocation != null &&
-                playerCharacterController != null &&
-                Crown != null && Crown.activeSelf) // Make sure crown is actually active
+                playerCharacterController != null)
             {
                 // Check if player is in crown return zone
                 float distance = Vector3.Distance(playerCharacterController.transform.position, 
@@ -266,6 +295,8 @@ namespace Unity.FPS.Gameplay
         
         void ReturnCrown()
         {
+            Debug.Log("ReturnCrown called");
+            
             // Play effects
             if (CrownReturnEffect != null)
                 CrownReturnEffect.SetActive(true);
@@ -273,9 +304,10 @@ namespace Unity.FPS.Gameplay
             if (CrownReturnSound != null)
                 AudioUtility.CreateSFX(CrownReturnSound, transform.position, AudioUtility.AudioGroups.Pickup, 0f);
                 
-            // Hide crown
-            if (Crown != null)
-                Crown.SetActive(false);
+            // CRITICAL CHANGE: Do NOT hide the crown after return
+            // The crown should remain visible where it was
+            // if (Crown != null)
+            //     Crown.SetActive(false);
                 
             // Complete objective and move to next
             sequentialObjective.AdvanceToNextObjective();

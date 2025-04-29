@@ -1,97 +1,53 @@
-using Unity.FPS.Game;
 using UnityEngine;
+using Unity.FPS.Game;
 
 namespace Unity.FPS.Gameplay
 {
-    [RequireComponent(typeof(Collider))]
-    public class CrownSpawnPoint : MonoBehaviour
+    public class CrownSpawnTrigger : MonoBehaviour
     {
-        [Tooltip("The crown GameObject that will be activated")]
         public GameObject Crown;
-        
-        [Tooltip("Where the crown will appear")]
-        public Transform CrownSpawnLocation;
-        
-        [Tooltip("Sound to play when crown appears")]
-        public AudioClip CrownAppearSound;
-        
-        [Tooltip("Particle effect to play when crown appears")]
-        public GameObject CrownAppearEffect;
-        
-        [Tooltip("Reference to MedievalObjectives component")]
+        public Transform SpawnLocation;
         public MedievalObjectives MedievalObjectives;
-        
-        private bool hasTriggered = false;
         
         void Start()
         {
+            // Hide crown at start
+            if (Crown)
+                Crown.SetActive(false);
+                
+            // Make sure we have a trigger
+            Collider col = GetComponent<Collider>();
+            if (col)
+                col.isTrigger = true;
+                
             // Get reference to MedievalObjectives if not set
             if (MedievalObjectives == null)
                 MedievalObjectives = FindObjectOfType<MedievalObjectives>();
-            
-            // Make sure the crown is initially inactive
-            if (Crown != null)
-                Crown.SetActive(false);
-                
-            // Make sure this trigger is initially disabled
-            // It will be enabled by MedievalObjectives when needed
-            gameObject.SetActive(false);
         }
         
         void OnTriggerEnter(Collider other)
         {
-            if (hasTriggered)
-                return;
-                
-            var player = other.GetComponent<PlayerCharacterController>();
-            
-            // Check if it's the player entering the trigger
-            if (player != null)
+            // If it's the player
+            if (other.GetComponent<PlayerCharacterController>())
             {
-                hasTriggered = true;
-                
-                // Spawn the crown at the designated location
-                if (Crown != null && CrownSpawnLocation != null)
+                // Show crown at spawn location
+                if (Crown && SpawnLocation)
                 {
-                    // Set the crown's position and rotation
-                    Crown.transform.SetPositionAndRotation(CrownSpawnLocation.position, CrownSpawnLocation.rotation);
-                    
-                    // Make sure it has no parent that might override its position
-                    if (Crown.transform.parent != null)
-                        Crown.transform.SetParent(null);
-                    
-                    // Now activate the crown
+                    Crown.transform.position = SpawnLocation.position;
+                    Crown.transform.rotation = SpawnLocation.rotation;
                     Crown.SetActive(true);
                     
-                    // Play effects
-                    if (CrownAppearEffect != null)
-                    {
-                        Instantiate(CrownAppearEffect, CrownSpawnLocation.position, Quaternion.identity);
-                    }
-                    
-                    if (CrownAppearSound != null)
-                    {
-                        AudioUtility.CreateSFX(CrownAppearSound, CrownSpawnLocation.position, AudioUtility.AudioGroups.Pickup, 0f);
-                    }
-                    
-                    // Display a message
-                    DisplayMessageEvent displayMessage = EventsGame.DisplayMessageEvent;
-                    displayMessage.Message = "You found the Ancient Crown!";
-                    displayMessage.DelayBeforeDisplay = 0f;
-                    EventManager.Broadcast(displayMessage);
-                    
-                    // Notify the MedievalObjectives
+                    // Notify the objectives system
                     if (MedievalObjectives != null)
                     {
                         MedievalObjectives.OnCrownRevealed();
-                    }
-                    else
-                    {
-                        Debug.LogError("MedievalObjectives reference is missing!");
+                        
+                        // Mark the current objective as complete and advance to next
+                        MedievalObjectives.AdvanceToNextObjectiveAfterCrownRevealed();
                     }
                 }
                 
-                // Disable this trigger after use
+                // Disable this trigger
                 gameObject.SetActive(false);
             }
         }
