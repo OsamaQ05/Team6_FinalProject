@@ -18,19 +18,24 @@ namespace Unity.FPS.Gameplay
         [Tooltip("Particle effect to play when crown appears")]
         public GameObject CrownAppearEffect;
         
+        [Tooltip("Reference to MedievalObjectives component")]
+        public MedievalObjectives MedievalObjectives;
+        
         private bool hasTriggered = false;
-        private MedievalManager medievalManager;
-        private MedievalObjectives medievalObjectives;
         
         void Start()
         {
-            // Get references
-            medievalManager = FindObjectOfType<MedievalManager>();
-            medievalObjectives = FindObjectOfType<MedievalObjectives>();
+            // Get reference to MedievalObjectives if not set
+            if (MedievalObjectives == null)
+                MedievalObjectives = FindObjectOfType<MedievalObjectives>();
             
             // Make sure the crown is initially inactive
             if (Crown != null)
                 Crown.SetActive(false);
+                
+            // Make sure this trigger is initially disabled
+            // It will be enabled by MedievalObjectives when needed
+            gameObject.SetActive(false);
         }
         
         void OnTriggerEnter(Collider other)
@@ -48,13 +53,7 @@ namespace Unity.FPS.Gameplay
                 // Spawn the crown at the designated location
                 if (Crown != null && CrownSpawnLocation != null)
                 {
-                    // Debug log to verify this code is running
-                    Debug.Log("Moving crown to spawn location: " + CrownSpawnLocation.position);
-                    
-                    // First make sure the crown is inactive before moving it
-                    Crown.SetActive(false);
-                    
-                    // Set the crown's position and rotation - explicitly using transform to ensure it works
+                    // Set the crown's position and rotation
                     Crown.transform.SetPositionAndRotation(CrownSpawnLocation.position, CrownSpawnLocation.rotation);
                     
                     // Make sure it has no parent that might override its position
@@ -75,17 +74,20 @@ namespace Unity.FPS.Gameplay
                         AudioUtility.CreateSFX(CrownAppearSound, CrownSpawnLocation.position, AudioUtility.AudioGroups.Pickup, 0f);
                     }
                     
-                    // Display message
+                    // Display a message
                     DisplayMessageEvent displayMessage = EventsGame.DisplayMessageEvent;
                     displayMessage.Message = "You found the Ancient Crown!";
                     displayMessage.DelayBeforeDisplay = 0f;
                     EventManager.Broadcast(displayMessage);
                     
-                    // Notify the objectives system if needed
-                    if (medievalObjectives != null)
+                    // Notify the MedievalObjectives
+                    if (MedievalObjectives != null)
                     {
-                        // Call OnCrownRevealed instead of OnCrownFound
-                        medievalObjectives.OnCrownRevealed();
+                        MedievalObjectives.OnCrownRevealed();
+                    }
+                    else
+                    {
+                        Debug.LogError("MedievalObjectives reference is missing!");
                     }
                 }
                 

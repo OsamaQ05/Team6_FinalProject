@@ -46,6 +46,10 @@ namespace Unity.FPS.Gameplay
         private int killedEnemies = 0;
         private int lastKnownStatueCount = 0;
         
+        // Add this to prevent the crown from having pickup behavior
+        // Don't want the crown to disappear on touch
+        private bool isPickupDisabled = false;
+        
         void Awake()
         {
             sequentialObjective = GetComponent<SequentialObjective>();
@@ -60,8 +64,8 @@ namespace Unity.FPS.Gameplay
                 Description = "Find and light all the sacred torches",
                 IsOptional = false,
                 CounterText = "0 / " + MedievalManager.TotalStatues,
-                ActivationNotification = "Find and light all the sacred torches",
-                CompletionNotification = "All torches lit! The crown awaits."
+                ActivationNotification = "",
+                CompletionNotification = "Torches Completed!"
             });
             
             // Add crown return objective
@@ -70,8 +74,8 @@ namespace Unity.FPS.Gameplay
                 Title = "Return the Crown",
                 Description = "Return the ancient crown to the altar",
                 IsOptional = false,
-                ActivationNotification = "Now return the crown to the altar",
-                CompletionNotification = "Crown returned! The sacred mask has appeared."
+                ActivationNotification = "",
+                CompletionNotification = "Crown Returned!"
             });
             
             // Add artifact (mask) retrieval objective
@@ -80,8 +84,8 @@ namespace Unity.FPS.Gameplay
                 Title = "Retrieve the Sacred Mask",
                 Description = "The ancient mask has appeared in the ritual chamber. Find and collect it to complete the ceremony.",
                 IsOptional = false,
-                ActivationNotification = "The Sacred Mask has appeared! Find it to complete the ancient ritual.",
-                CompletionNotification = "Sacred Mask obtained! The ancient power is now yours."
+                ActivationNotification = "",
+                CompletionNotification = ""
             });
             
             // Add optional kill objective if enabled
@@ -108,14 +112,85 @@ namespace Unity.FPS.Gameplay
             
             // Hide the crown initially
             if (Crown != null)
+            {
                 Crown.SetActive(false);
                 
-            // Make sure the spawn point trigger is disabled initially (if being used)
+                // IMPORTANT: Disable any Pickup component on the crown so it doesn't vanish when touched
+                DisableCrownPickup();
+            }
+                
+            // Make sure the crown spawn point trigger is disabled initially
             if (CrownSpawnPointTrigger != null)
                 CrownSpawnPointTrigger.SetActive(false);
                 
             // Start tracking torch lighting progress
             StartCoroutine(MonitorObjectives());
+        }
+        
+        // Add this method to disable any Pickup component on the Crown
+        void DisableCrownPickup()
+        {
+            if (Crown != null && !isPickupDisabled)
+            {
+                // Check for Pickup component and disable it
+                Pickup pickup = Crown.GetComponent<Pickup>();
+                if (pickup != null)
+                {
+                    pickup.enabled = false;
+                    Debug.Log("Disabled Pickup component on Crown");
+                }
+                
+                // Check for any collider component that might be set as a trigger
+                Collider crowncollider = Crown.GetComponent<Collider>();
+                if (crowncollider != null && crowncollider.isTrigger)
+                {
+                    // Either disable the trigger or make it non-trigger
+                    // crowncollider.isTrigger = false;
+                    Debug.Log("Modified collider on Crown");
+                }
+                
+                isPickupDisabled = true;
+            }
+        }
+        
+        IEnumerator AdvanceToCrownReturnObjective(float delay)
+        {
+            yield return new WaitForSeconds(delay);
+            
+            // Complete the torch objective
+            sequentialObjective.AdvanceToNextObjective();
+            
+            // Activate the crown spawn trigger
+            if (CrownSpawnPointTrigger != null)
+            {
+                Debug.Log("Activating crown spawn trigger");
+                CrownSpawnPointTrigger.SetActive(true);
+            }
+            else
+            {
+                Debug.LogError("Crown spawn trigger is not assigned!");
+                // Fallback - directly activate the crown
+                if (Crown != null)
+                {
+                    Crown.SetActive(true);
+                    isCrownObjectiveActive = true;
+                }
+            }
+        }
+
+        // This gets called from the CrownSpawnPoint script
+        public void OnCrownRevealed()
+        {
+            Debug.Log("Crown revealed by spawn trigger");
+            
+            // Make sure the crown can't be picked up (only returned)
+            DisableCrownPickup();
+            
+            // Set the crown objective as active
+            isCrownObjectiveActive = true;
+            
+            // If the current objective index is already at 1, we don't need to do anything else
+            // The return objective should already be active
         }
         
         void Update()
@@ -142,7 +217,8 @@ namespace Unity.FPS.Gameplay
             if (isCrownObjectiveActive && 
                 sequentialObjective.GetCurrentObjectiveIndex() == 1 && // Now index 1 is the return crown objective
                 CrownReturnLocation != null &&
-                playerCharacterController != null)
+                playerCharacterController != null &&
+                Crown != null && Crown.activeSelf) // Make sure crown is actually active
             {
                 // Check if player is in crown return zone
                 float distance = Vector3.Distance(playerCharacterController.transform.position, 
@@ -161,43 +237,6 @@ namespace Unity.FPS.Gameplay
                     isPlayerInReturnZone = false;
                 }
             }
-        }
-        
-        // Method for transitioning directly to the crown return objective
-        IEnumerator AdvanceToCrownReturnObjective(float delay)
-        {
-            yield return new WaitForSeconds(delay);
-            
-            // Complete the torch objective
-            sequentialObjective.AdvanceToNextObjective();
-            
-            // Activate the crown directly or use the spawn point trigger
-            if (CrownSpawnPointTrigger != null)
-            {
-                // If using the trigger approach, activate it
-                CrownSpawnPointTrigger.SetActive(true);
-            }
-            else
-            {
-                // Otherwise just show the crown directly
-                if (Crown != null)
-                {
-                    Crown.SetActive(true);
-                    isCrownObjectiveActive = true;
-                }
-            }
-        }
-        
-        // This can be called by CrownSpawnPoint if you're using that approach
-        public void OnCrownRevealed()
-        {
-            // Enable the crown and set the return objective as active
-            if (Crown != null)
-            {
-                Crown.SetActive(true);
-            }
-            
-            isCrownObjectiveActive = true;
         }
         
         IEnumerator MonitorObjectives()
