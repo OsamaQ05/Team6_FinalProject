@@ -12,6 +12,7 @@ namespace Unity.FPS.UI
         public string TextDirection;
 
         Compass m_Compass;
+        bool m_IsRegistered = false;
 
         void Awake()
         {
@@ -21,12 +22,37 @@ namespace Unity.FPS.UI
             var markerInstance = Instantiate(CompassMarkerPrefab);
 
             markerInstance.Initialize(this, TextDirection);
+            
+            // Register with the compass
             m_Compass.RegisterCompassElement(transform, markerInstance);
+            m_IsRegistered = true;
+        }
+
+        void OnEnable()
+        {
+            // Update visibility when object becomes active
+            if (m_Compass != null && m_IsRegistered)
+            {
+                m_Compass.UpdateCompassMarkerVisibility(transform);
+            }
+        }
+
+        void OnDisable()
+        {
+            // Update visibility when object becomes inactive
+            if (m_Compass != null && m_IsRegistered)
+            {
+                m_Compass.UpdateCompassMarkerVisibility(transform);
+            }
         }
 
         void OnDestroy()
         {
-            m_Compass.UnregisterCompassElement(transform);
+            if (m_Compass != null && m_IsRegistered)
+            {
+                m_Compass.UnregisterCompassElement(transform);
+                m_IsRegistered = false;
+            }
         }
     }
 }

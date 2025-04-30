@@ -24,9 +24,12 @@ namespace Unity.FPS.UI
         public TMPro.TextMeshProUGUI TextContent;
 
         EnemyController m_EnemyController;
+        CompassElement m_CompassElement;
 
         public void Initialize(CompassElement compassElement, string textDirection)
         {
+            m_CompassElement = compassElement;
+            
             if (IsDirection && TextContent)
             {
                 TextContent.text = textDirection;
@@ -43,6 +46,9 @@ namespace Unity.FPS.UI
                     LostTarget();
                 }
             }
+            
+            // Set initial visibility based on compass element's active state
+            UpdateVisibility();
         }
 
         public void DetectTarget()
@@ -53,6 +59,25 @@ namespace Unity.FPS.UI
         public void LostTarget()
         {
             MainImage.color = DefaultColor;
+        }
+        
+        public void UpdateVisibility()
+        {
+            // Only apply visibility changes for non-direction markers that have CanvasGroup
+            if (!IsDirection && CanvasGroup != null && m_CompassElement != null)
+            {
+                CanvasGroup.alpha = m_CompassElement.gameObject.activeInHierarchy ? 1f : 0f;
+            }
+        }
+        
+        private void OnDestroy()
+        {
+            // Clean up event subscriptions
+            if (m_EnemyController != null)
+            {
+                m_EnemyController.onDetectedTarget -= DetectTarget;
+                m_EnemyController.onLostTarget -= LostTarget;
+            }
         }
     }
 }

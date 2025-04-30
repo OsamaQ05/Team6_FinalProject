@@ -38,6 +38,14 @@ namespace Unity.FPS.UI
             // this is all very WIP, and needs to be reworked
             foreach (var element in m_ElementsDictionnary)
             {
+                // Skip processing markers for inactive GameObjects
+                if (!element.Key.gameObject.activeInHierarchy && !element.Value.IsDirection)
+                {
+                    // Ensure marker is hidden for inactive objects
+                    element.Value.CanvasGroup.alpha = 0;
+                    continue;
+                }
+                
                 float distanceRatio = 1;
                 float heightDifference = 0;
                 float angle;
@@ -84,6 +92,12 @@ namespace Unity.FPS.UI
             marker.transform.SetParent(CompasRect);
 
             m_ElementsDictionnary.Add(element, marker);
+            
+            // Set initial visibility based on GameObject's active state
+            if (!element.gameObject.activeInHierarchy && marker.CanvasGroup != null && !marker.IsDirection)
+            {
+                marker.CanvasGroup.alpha = 0;
+            }
         }
 
         public void UnregisterCompassElement(Transform element)
@@ -91,6 +105,17 @@ namespace Unity.FPS.UI
             if (m_ElementsDictionnary.TryGetValue(element, out CompassMarker marker) && marker.CanvasGroup != null)
                 Destroy(marker.CanvasGroup.gameObject);
             m_ElementsDictionnary.Remove(element);
+        }
+        
+        // New method to update visibility of a specific compass marker
+        public void UpdateCompassMarkerVisibility(Transform element)
+        {
+            if (m_ElementsDictionnary.TryGetValue(element, out CompassMarker marker) && 
+                marker.CanvasGroup != null && 
+                !marker.IsDirection)
+            {
+                marker.CanvasGroup.alpha = element.gameObject.activeInHierarchy ? 1 : 0;
+            }
         }
     }
 }

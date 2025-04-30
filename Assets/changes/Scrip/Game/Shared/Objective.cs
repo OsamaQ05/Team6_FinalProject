@@ -27,7 +27,7 @@ namespace Unity.FPS.Game
         {
             OnObjectiveCreated?.Invoke(this);
 
-            DisplayMessageEvent displayMessage = Events.DisplayMessageEvent;
+            DisplayMessageEvent displayMessage = EventsGame.DisplayMessageEvent;
             displayMessage.Message = Title;
             displayMessage.DelayBeforeDisplay = 0.0f;
             EventManager.Broadcast(displayMessage);
@@ -35,7 +35,7 @@ namespace Unity.FPS.Game
 
         public void UpdateObjective(string descriptionText, string counterText, string notificationText)
         {
-            ObjectiveUpdateEvent evt = Events.ObjectiveUpdateEvent;
+            ObjectiveUpdateEvent evt = EventsGame.ObjectiveUpdateEvent;
             evt.Objective = this;
             evt.DescriptionText = descriptionText;
             evt.CounterText = counterText;
@@ -48,7 +48,7 @@ namespace Unity.FPS.Game
         {
             IsCompleted = true;
 
-            ObjectiveUpdateEvent evt = Events.ObjectiveUpdateEvent;
+            ObjectiveUpdateEvent evt = EventsGame.ObjectiveUpdateEvent;
             evt.Objective = this;
             evt.DescriptionText = descriptionText;
             evt.CounterText = counterText;

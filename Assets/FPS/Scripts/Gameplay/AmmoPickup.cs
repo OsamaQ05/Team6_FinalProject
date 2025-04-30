@@ -21,7 +21,7 @@ namespace Unity.FPS.Gameplay
                 {
                     weapon.AddCarriablePhysicalBullets(BulletCount);
 
-                    AmmoPickupEvent evt = Events.AmmoPickupEvent;
+                    AmmoPickupEvent evt = EventsGame.AmmoPickupEvent;
                     evt.Weapon = weapon;
                     EventManager.Broadcast(evt);
 
