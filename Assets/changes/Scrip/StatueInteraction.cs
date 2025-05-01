@@ -44,13 +44,13 @@ public class StatueInteraction : MonoBehaviour
         switch (selectedManager)
         {
             case ManagerType.Medieval:
-                medievalManager = FindObjectOfType<MedievalManager>();
+                medievalManager = FindFirstObjectByType<MedievalManager>();
                 if (medievalManager == null)
                     Debug.LogError("MedievalManager not found but StatueInteraction is set to use it!");
                 break;
                 
             case ManagerType.Samurai:
-                samuraiManager = FindObjectOfType<SamuraiGameManager>();
+                samuraiManager = FindFirstObjectByType<SamuraiGameManager>();
                 if (samuraiManager == null)
                     Debug.LogError("SamuraiGameManager not found but StatueInteraction is set to use it!");
                 break;
@@ -181,7 +181,7 @@ public class StatueInteraction : MonoBehaviour
     {
         if (interactPromptText != null)
         {
-            interactPromptText.alpha = 0f; // Hide 🔥
+            interactPromptText.alpha = 0f; // Hide ��
         }
     }
 }

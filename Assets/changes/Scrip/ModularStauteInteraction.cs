@@ -38,27 +38,27 @@ public class ModularStatueInteraction : MonoBehaviour
         // Try to find appropriate manager based on settings
         if (UseMedievalManager)
         {
-            medievalManager = FindObjectOfType<MedievalManager>();
+            medievalManager = FindFirstObjectByType<MedievalManager>();
             if (medievalManager == null)
                 Debug.LogWarning("ModularStatueInteraction set to use MedievalManager but none was found!");
         }
         else if (UseSamuraiManager)
         {
-            samuraiManager = FindObjectOfType<SamuraiGameManager>();
+            samuraiManager = FindFirstObjectByType<SamuraiGameManager>();
             if (samuraiManager == null)
                 Debug.LogWarning("ModularStatueInteraction set to use SamuraiGameManager but none was found!");
         }
         else
         {
             // Auto-detect manager if not specified
-            medievalManager = FindObjectOfType<MedievalManager>();
+            medievalManager = FindFirstObjectByType<MedievalManager>();
             if (medievalManager != null)
             {
                 UseMedievalManager = true;
             }
             else
             {
-                samuraiManager = FindObjectOfType<SamuraiGameManager>();
+                samuraiManager = FindFirstObjectByType<SamuraiGameManager>();
                 if (samuraiManager != null)
                 {
                     UseSamuraiManager = true;
@@ -199,7 +199,7 @@ public class ModularStatueInteraction : MonoBehaviour
     {
         if (interactPromptText != null)
         {
-            interactPromptText.alpha = 0f; // Hide 🔥
+            interactPromptText.alpha = 0f; // Hide ��
         }
     }
 }

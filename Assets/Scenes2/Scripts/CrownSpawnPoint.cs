@@ -22,7 +22,7 @@ namespace Unity.FPS.Gameplay
                 
             // Get reference to MedievalObjectives if not set
             if (MedievalObjectives == null)
-                MedievalObjectives = FindObjectOfType<MedievalObjectives>();
+                MedievalObjectives = FindFirstObjectByType<MedievalObjectives>();
         }
         
         void OnTriggerEnter(Collider other)

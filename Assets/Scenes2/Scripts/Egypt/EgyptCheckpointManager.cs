@@ -92,7 +92,7 @@ namespace Unity.FPS.Gameplay
             sequentialObjective = GetComponent<EgyptSequentialObjective>();
             
             // Find the player controller
-            playerController = FindObjectOfType<PlayerCharacterController>();
+            playerController = FindFirstObjectByType<PlayerCharacterController>();
             
             // Make sure all checkpoints are initially hidden
             HideAllCheckpoints();

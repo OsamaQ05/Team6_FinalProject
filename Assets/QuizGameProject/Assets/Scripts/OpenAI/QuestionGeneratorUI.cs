@@ -8,8 +8,8 @@ public class QuestionGeneratorUI : MonoBehaviour
     [SerializeField] private OpenAIQuestionGenerator questionGenerator;
     [SerializeField] private Button generateButton;
     [SerializeField] private TextMeshProUGUI statusText;
-    [SerializeField] private Transform questionsContainer;
-    [SerializeField] private GameObject questionPrefab;
+    [SerializeField] public Transform questionsContainer;
+    [SerializeField] public GameObject questionPrefab;
 
     private string[] topics = new string[]
     {
@@ -27,13 +27,21 @@ public class QuestionGeneratorUI : MonoBehaviour
 
     private void Start()
     {
-        generateButton.onClick.AddListener(GenerateQuestions);
+        // Hide the generate button since we'll generate questions automatically
+        if (generateButton != null)
+            generateButton.gameObject.SetActive(false);
     }
 
-    private async void GenerateQuestions()
+    private void OnEnable()
     {
-        generateButton.interactable = false;
-        statusText.text = "Generating questions...";
+        // Automatically generate questions when the component is enabled
+        GenerateQuestions();
+    }
+
+    public async void GenerateQuestions()
+    {
+        if (statusText != null)
+            statusText.text = "Generating questions...";
 
         try
         {
@@ -56,15 +64,13 @@ public class QuestionGeneratorUI : MonoBehaviour
                 }
             }
 
-            statusText.text = $"Generated {questions.Count} questions successfully!";
+            if (statusText != null)
+                statusText.text = $"Generated {questions.Count} questions successfully!";
         }
         catch (System.Exception e)
         {
-            statusText.text = $"Error: {e.Message}";
-        }
-        finally
-        {
-            generateButton.interactable = true;
+            if (statusText != null)
+                statusText.text = $"Error: {e.Message}";
         }
     }
 } 

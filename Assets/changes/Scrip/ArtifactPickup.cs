@@ -25,7 +25,7 @@ namespace Unity.FPS.Gameplay
             // Try to find the appropriate manager
             if (UseMedievalManager)
             {
-                MedievalManager medievalManager = FindObjectOfType<MedievalManager>();
+                MedievalManager medievalManager = FindFirstObjectByType<MedievalManager>();
                 if (medievalManager != null && !medievalManager.AreAllStatuesCleansed())
                 {
                     gameObject.SetActive(false);
@@ -33,7 +33,7 @@ namespace Unity.FPS.Gameplay
             }
             else if (UseSamuraiManager)
             {
-                SamuraiGameManager samuraiManager = FindObjectOfType<SamuraiGameManager>();
+                SamuraiGameManager samuraiManager = FindFirstObjectByType<SamuraiGameManager>();
                 if (samuraiManager != null && !samuraiManager.AreAllStatuesCleansed())
                 {
                     gameObject.SetActive(false);
@@ -42,14 +42,14 @@ namespace Unity.FPS.Gameplay
             else
             {
                 // If no specific manager is selected, try to find either one
-                MedievalManager medievalManager = FindObjectOfType<MedievalManager>();
+                MedievalManager medievalManager = FindFirstObjectByType<MedievalManager>();
                 if (medievalManager != null)
                 {
                     UseMedievalManager = true;
                 }
                 else
                 {
-                    SamuraiGameManager samuraiManager = FindObjectOfType<SamuraiGameManager>();
+                    SamuraiGameManager samuraiManager = FindFirstObjectByType<SamuraiGameManager>();
                     if (samuraiManager != null)
                     {
                         UseSamuraiManager = true;
@@ -77,7 +77,7 @@ namespace Unity.FPS.Gameplay
             // Notify the appropriate game manager that the artifact was collected
             if (UseMedievalManager)
             {
-                MedievalManager medievalManager = FindObjectOfType<MedievalManager>();
+                MedievalManager medievalManager = FindFirstObjectByType<MedievalManager>();
                 if (medievalManager != null)
                 {
                     Debug.Log("Artifact collected - notifying MedievalManager");
@@ -90,7 +90,7 @@ namespace Unity.FPS.Gameplay
             }
             else if (UseSamuraiManager)
             {
-                SamuraiGameManager samuraiManager = FindObjectOfType<SamuraiGameManager>();
+                SamuraiGameManager samuraiManager = FindFirstObjectByType<SamuraiGameManager>();
                 if (samuraiManager != null)
                 {
                     Debug.Log("Artifact collected - notifying SamuraiGameManager");

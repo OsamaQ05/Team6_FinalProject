@@ -107,7 +107,7 @@ namespace Unity.FPS.Gameplay
         void Start()
         {
             // Find player
-            playerCharacterController = FindObjectOfType<PlayerCharacterController>();
+            playerCharacterController = FindFirstObjectByType<PlayerCharacterController>();
             
             // Hide the crown initially
             if (Crown != null)
